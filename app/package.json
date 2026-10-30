@@ -1,0 +1,29 @@
+{
+  "name": "threshold",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Threshold — a review inbox where a coding agent hands you a change and you talk it through before it lands.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build && vite build -c vite.mobile.config.ts",
+    "app:dev": "tauri dev",
+    "app:build": "tauri build",
+    "test": "node --test --experimental-strip-types src/*.test.ts",
+    "build:mobile": "vite build -c vite.mobile.config.ts",
+    "dev:mobile": "vite -c vite.mobile.config.ts",
+    "dev:preview": "vite --open /preview.html"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.11.1",
+    "@tauri-apps/plugin-dialog": "^2.7.3",
+    "@tauri-apps/plugin-notification": "^2.4.0",
+    "markdown-it": "^14.3.2"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4",
+    "@types/markdown-it": "^14.2.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  }
+}

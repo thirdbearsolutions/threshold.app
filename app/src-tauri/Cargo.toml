@@ -1,0 +1,53 @@
+[package]
+name = "threshold-desktop"
+description = "Threshold — a review inbox where a coding agent hands you a change and you talk it through before it lands."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+name = "threshold_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "threshold-desktop"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+threshold-core = { path = "../../crates/threshold-core" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-notification = "2"
+axum = { version = "0.8", default-features = false, features = ["http1", "json", "tokio", "query"] }
+tokio = { version = "1", features = ["net", "sync", "time", "macros", "rt"] }
+getrandom = "0.3"
+sha2 = "0.10"
+futures-util = { version = "0.3", default-features = false }
+qrcode = { version = "0.14", default-features = false, features = ["svg"] }
+tauri-plugin-window-state = "~2.4"
+base64 = "0.22"
+tower-http = { version = "0.6", default-features = false, features = ["compression-gzip"] }
+reqwest = { version = "0.13", default-features = false, features = ["native-tls"] }
+p256 = { version = "0.13", features = ["ecdsa", "ecdh", "pkcs8"] }
+aes-gcm = "0.10"
+hkdf = "0.12"
+
+[dev-dependencies]
+http-body-util = "0.1"
+tempfile = "3.10"
+tower = { version = "0.5", features = ["util"] }
+
+# Notifications through UNUserNotificationCenter directly: the plugin's
+# macOS path cannot present a banner while Threshold is frontmost, and
+# cannot say which notification was clicked.
+[target.'cfg(target_os = "macos")'.dependencies]
+block2 = "0.6"
+objc2 = "0.6"
+objc2-foundation = "0.3"
+objc2-user-notifications = "0.3"

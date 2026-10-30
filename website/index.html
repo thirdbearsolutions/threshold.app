@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Threshold: read a change in the order that explains it</title>
+  <meta name="description" content="Threshold is a desktop review inbox. A diff arrives cut into chapters, in the order that explains it, with the lines that matter flagged and a thread on any line. For your agent's changes and your colleagues' PRs.">
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="stylesheet" href="css/site.css">
+  <script src="js/site.js" defer></script>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html"><img src="icon.png" alt="">Threshold</a>
+    <nav>
+      <a href="#problem">Why</a>
+      <a href="#review">A review</a>
+      <a href="#two-ways">Two ways in</a>
+      <a href="#promises">How it works</a>
+      <a href="guide.html">Guide</a>
+      <a class="btn small" data-repo="">Source</a>
+      <a class="btn small lit" href="#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <div>
+      <h1>Threshold</h1>
+      <p class="tag">Nothing crosses without being seen.</p>
+      <p class="lede first">A desktop review inbox that lets you actually review code again.</p>
+      <p class="lede">A change arrives cut into chapters, the idea first and the mechanical edits last, with the few lines that matter already flagged. Ask about any line and the answer comes back in a thread on that line. It works for your agent's own changes and for colleagues' PRs.</p>
+      <div class="ctas">
+        <a class="btn lit" href="#download">Download for Mac</a>
+        <a class="btn" href="guide.html">Read the guide</a>
+      </div>
+    </div>
+    <div class="door" aria-hidden="true">
+      <div class="frame"></div><div class="floor"></div><div class="sill"></div>
+    </div>
+  </div>
+</div>
+
+<section id="problem">
+  <div class="wrap cols">
+    <div class="prose">
+      <p class="kicker">The problem</p>
+      <h2>"Shall I proceed?"</h2>
+      <p>An agent finishes something wide-reaching: a schema migration, a mass rename, a bulk delete. It asks permission in a line of chat.</p>
+      <p>That line asks you to approve a change <strong>you cannot see</strong>. Four hundred lines, summarized in one sentence, by the author, who is sure it's fine.</p>
+      <p>So you type <code>y</code>. Everyone does.</p>
+    </div>
+    <div class="chat">
+      <div class="msg agent"><div class="who">agent</div>Done. I moved every book cover into storage, deleted the local copies, and updated 22 templates to use the new URLs. Tests pass. Shall I proceed with the push?</div>
+      <div class="msg human"><div class="who">you</div>y</div>
+      <div class="after">// one of the 22 was in an email template outside this repo</div>
+    </div>
+  </div>
+</section>
+
+<section class="alt insight" id="insight">
+  <div class="wrap">
+    <p class="kicker">The insight</p>
+    <blockquote>Git tells a change in alphabetical order.<br>Someone who understands it can tell it <em>in chapters</em>.</blockquote>
+    <p>An agent that wrote the change, or has just read it, knows which part is the idea, which parts follow from it, and which are 22 identical call-site edits. Threshold has it cut the diff that way: chapters in the order that explains the change, flags on the three lines that could bite, and a thread on any line you ask about.</p>
+  </div>
+</section>
+
+<section id="review">
+  <div class="wrap">
+    <p class="kicker">A review</p>
+    <h2>A diff, cut into chapters.</h2>
+    <div class="app" role="img" aria-label="A Threshold review: a brief, chapters, a flagged diff line, a note, and the verdict buttons">
+      <div class="bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span>&nbsp; 2026-10-27-143005-stacks.jsonl &middot; main...HEAD &middot; pinned 3f9e1c2..a71d0b4</div>
+      <div class="body">
+        <div class="rail">
+          <div class="brief"><b>Move book covers into storage</b>
+            Covers move from a folder on the server into a storage service, and a one-off command moves the existing files.
+            <ul>
+              <li>Irreversible: each local cover is deleted once uploaded</li>
+              <li>Pages now depend on storage being reachable</li>
+              <li>Not run against a full set of covers: worth a second look</li>
+            </ul>
+          </div>
+          <div class="chap on"><span class="ck">✓</span> 1 &middot; Covers come from storage</div>
+          <div class="chap"><span>&nbsp;</span> 2 &middot; Moving the files</div>
+          <div class="chap"><span>&nbsp;</span> 3 &middot; Mechanical: 22 templates</div>
+          <div class="cov">13 of 13 hunks in a chapter</div>
+        </div>
+        <div class="diff">
+          <div class="fband">stacks/commands/move_covers.py</div>
+          <div class="hh">@@ -0,0 +1,12 @@</div>
+          <div class="ln add"><span>10</span><span>+        storage.put(f"covers/{name}", path)</span></div>
+          <div class="ln add"><span>11</span><span>+        os.remove(path)</span></div>
+          <div class="flag"><span class="k">caution</span>This is the irreversible one: each local cover is deleted once it is uploaded.</div>
+          <div class="note"><span class="k">you</span>What if an upload fails halfway?</div>
+          <div class="note"><span class="k">agent</span>It would delete a cover that never arrived. The revision checks each upload before removing anything.</div>
+          <div class="hh">@@ -4,4 +4,6 @@ def book_card(book):</div>
+          <div class="ln del"><span>5</span><span>-    return {"title": book.title, "cover": covers.cover_url(book)}</span></div>
+          <div class="ln add"><span>6</span><span>+    cover = covers.cover_url(book) if storage.exists(key) else "/static/no-cover.svg"</span></div>
+        </div>
+      </div>
+      <div class="verdict"><span class="no">Reject…</span><span class="ok">Approve</span></div>
+    </div>
+
+    <div class="steps">
+      <div class="step"><h3>The brief</h3><p>What the change is, what it implies, and what's worth a second look. Before a single line of code.</p></div>
+      <div class="step"><h3>Chapters</h3><p>The diff in the order that explains it: the idea, then what follows from it, then the mechanical edits, labelled "skim this".</p></div>
+      <div class="step"><h3>Flags</h3><p>Out of four hundred lines, the three that matter: <code>attention</code>, <code>caution</code>, <code>context</code>.</p></div>
+      <div class="step"><h3>Threads</h3><p>Ask on any line, chapter or the whole change. The answer lands in a thread on that line, and stays there.</p></div>
+      <div class="step"><h3>The verdict</h3><p>Approve, or reject with a reason. Either names the exact diff that was on your screen.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="two-ways">
+  <div class="wrap">
+    <p class="kicker">Two ways in</p>
+    <h2>Your agent's change. Your colleague's PR.</h2>
+    <div class="grid2">
+      <div class="card"><div class="mark">a &middot; before it lands</div><h3>Your agent hands you its work.</h3><p>It's finished something wide-reaching, like a migration, a mass rename or a refactor. It commits to a branch and writes the review. When you ask about a line, it answers in a thread. If you find a problem, it fixes it and commits, and the review moves to the new commits.</p></div>
+      <div class="card"><div class="mark">b &middot; someone else's change</div><h3>An agent reviews a colleague's PR with you.</h3><p>Ask it to read the PR and hand it to you in Threshold, with chapters, flags on what you should look at, and what it couldn't work out from the code. You read it, ask about anything, and take what you've learned back to the PR. The agent didn't write the change, so it can explain it but not revise it.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="promises">
+  <div class="wrap">
+    <p class="kicker">How it works</p>
+    <h2>How reviews work.</h2>
+    <div class="grid3">
+      <div class="card"><div class="mark">coverage</div><h3>Review the whole diff</h3><p>Threshold checks that each hunk of the diff is in one of the agent's chapters. If any are left out, the count turns red and the missing hunks get a section of their own.</p></div>
+      <div class="card"><div class="mark">pinning</div><h3>Reviews don't drift</h3><p>When a review arrives, Threshold records the two commits it compares. Later commits on the branch or on <code>main</code> don't change it. Your approval includes a SHA-256 hash of that diff, so the agent can check it before shipping.</p></div>
+      <div class="card"><div class="mark">~/.threshold/reviews/</div><h3>Reviews are files</h3><p>Each review is a JSONL file the agent appends to. There's no server or SDK: any agent that can run shell commands can use Threshold, and you can read the file yourself.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="phone">
+  <div class="wrap cols">
+    <div class="prose">
+      <p class="kicker">Away from the desk</p>
+      <h2>The doorway follows you.</h2>
+      <p>An agent waiting on your answer shouldn't be stuck until you're back at a desk. Threshold serves your reviews to your phone over your own tailnet: read, ask, mark chapters, approve or reject, and get a notification when an agent has said something you're waiting on.</p>
+      <p>There is nothing to download for the phone. <strong>Pair it from the Mac</strong> by scanning a code that works once, for one minute.</p>
+    </div>
+    <div class="card">
+      <div class="mark">how it stays safe</div>
+      <ul style="color:var(--muted);font-size:15px;padding-left:18px;margin:0">
+        <li>Listens on 127.0.0.1; <code>tailscale serve</code> puts it on your tailnet, never the public internet.</li>
+        <li>A verdict from the phone names the diff it read, and is refused if that diff has changed.</li>
+        <li>Every request carries a device credential. Revoke a phone from the Mac.</li>
+        <li>Notifications are encrypted end to end; the push service relays what it can't read.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="alt" id="download">
+  <div class="wrap">
+    <p class="kicker">Download &middot; v<span data-version>0.1.0</span></p>
+    <h2>Pick up Threshold.</h2>
+    <p class="dl-note" id="dl-detected"></p>
+    <div class="dl-grid">
+      <div class="dl" data-build="mac-arm64">
+        <h3>macOS</h3><div class="sub">Apple silicon (M1 and later). In daily use.</div>
+        <div class="file">Threshold_<span data-version>0.1.0</span>_aarch64.dmg</div>
+        <a class="btn dl-btn">Download .dmg</a>
+      </div>
+      <div class="dl" data-build="mac-x64">
+        <h3>macOS</h3><div class="sub">Intel Macs.</div>
+        <div class="file">x86_64 &middot; not built yet</div>
+        <a class="btn dl-btn">Download .dmg</a>
+      </div>
+      <div class="dl" data-build="linux">
+        <h3>Linux</h3><div class="sub">Builds and passes its tests; not packaged yet.</div>
+        <div class="file">.AppImage / .deb &middot; not built yet</div>
+        <a class="btn dl-btn">Download</a>
+      </div>
+      <div class="dl" data-build="windows">
+        <h3>Windows</h3><div class="sub">Not tried yet.</div>
+        <div class="file">&nbsp;</div>
+        <a class="btn dl-btn">Download</a>
+      </div>
+    </div>
+    <div class="after-dl">
+      <div class="card"><div class="mark">first open</div><p>The builds aren't notarized yet, so the first launch stops with a warning that offers only <b>Done</b> or <b>Move to Trash</b>. Click <b>Done</b>, then go to <b>System Settings → Privacy &amp; Security</b>, scroll down, and click <b>Open Anyway</b>. After that it opens like anything else. <a href="guide.html#install">Step by step →</a></p></div>
+      <div class="card"><div class="mark">then</div><p>Give your agent the <code>threshold-review</code> skill, so it knows how to hand you a review. <a href="guide.html#agent">Hooking up an agent →</a></p></div>
+    </div>
+  </div>
+</section>
+
+<section id="source">
+  <div class="wrap">
+    <p class="kicker">Source &middot; MIT</p>
+    <h2>The source code.</h2>
+    <div class="repo">
+      <div>
+        <div class="url" data-repo-text>github.com/thirdbearsolutions/threshold.app</div>
+      </div>
+      <a class="btn" data-repo="">View source</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <a class="brand" href="index.html"><img src="icon.png" alt="">Threshold</a>
+    <span class="spacer"></span>
+    <a href="guide.html">Guide</a>
+    <a href="guide.html#log">Session log reference</a>
+    <a data-repo="">Source</a>
+    <span>MIT &middot; Third Bear Solutions</span>
+  </div>
+</footer>
+
+</body>
+</html>

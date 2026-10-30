@@ -1,0 +1,862 @@
+/* Threshold — a gate, not a code browser.
+ *
+ * The evidence (the diff) is the largest surface; the argument (what the
+ * agent says about it) sits beside it in a rail, never stacked above it.
+ * The rail ends with the diff's facts and then the two buttons, so the
+ * last thing read before deciding is what the change deletes and touches.
+ *
+ * Every color, size and radius below the theme blocks is a token, named
+ * for what it means rather than how it looks, so a theme is only a set of
+ * values. The meanings hold in every theme: green is approval and only
+ * approval; red is deletion, danger and Threshold's own findings; the
+ * accent is the reviewer's voice, the active row and focus; Claude has a
+ * color of its own.
+ *
+ * Light and Dark are built from Primer, GitHub's design system (MIT,
+ * github.com/primer/primitives). Threshold is the amber-on-warm-dark look
+ * shared with the other tools in this repo. */
+
+/* --- Light, and the default before a theme is applied ---------------- */
+:root, [data-theme="light"] {
+  color-scheme: light;
+  --bg: #ffffff; --bg-2: #f6f8fa; --bg-3: #eff2f5; --bg-4: #e6eaef;
+  --code: #ffffff; --code-line: #f6f8fa;
+  --line: #d1d9e0; --line-soft: #e1e6eb;
+  --text: #1f2328; --muted: #59636e; --dim: #6e7781;
+  --accent: #0969da; --on-accent: #ffffff; --focus: #0969da;
+  --attention: #9a6700; --flag-attention: #9a6700;
+  --success: #1a7f37; --approve: #1f883d; --approve-hover: #1c8139; --on-approve: #ffffff;
+  --danger: #d1242f; --danger-hover-bg: #cf222e; --danger-hover-fg: #ffffff; --danger-hover-border: #cf222e;
+  --agent: #8250df; --on-agent: #ffffff;
+  --toggle-track: #eff2f5; --toggle-on-bg: #ffffff; --toggle-on-fg: #1f2328; --toggle-on-shadow: 0 0 0 1px #d1d9e0, 0 1px 0 rgba(31,35,40,0.04);
+  --field-bg: #ffffff; --field-ring: 0 0 0 3px rgba(9,105,218,0.3);
+  --gutter-fg: #59636e;
+  --diff-add-line: #dafbe1; --diff-add-gutter: #d1f8d9; --diff-add-gutter-fg: #1f2328;
+  --diff-del-line: #ffebe9; --diff-del-gutter: #ffcecb; --diff-del-gutter-fg: #1f2328;
+  --hunk-bg: #ddf4ff; --gap-bg: #f6f8fa; --flag-gutter: #eef1f4;
+  --checker-a: #e9ebef; --checker-b: #ffffff;
+  --backdrop: rgba(31,35,40,0.4); --shadow-overlay: 0 8px 24px rgba(140,149,159,0.2), 0 0 0 1px rgba(31,35,40,0.06);
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  --fs-2xs: 11px; --fs-xs: 12px; --fs-sm: 12px; --fs-md: 14px; --fs-lg: 14px; --fs-lead: 16px; --fs-title: 16px; --fs-2xl: 20px;
+  --fs-code: 12px; --lh-code: 20px; --btn-weight: 500;
+  --label-font: var(--sans); --label-size: 12px; --label-weight: 600; --label-tracking: 0; --label-case: none; --caps-case: none;
+  --brand-fg: #1f2328; --brand-size: 14px; --brand-weight: 600; --brand-tracking: 0; --brand-case: none;
+}
+
+/* --- Dark ------------------------------------------------------------ */
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0d1117; --bg-2: #151b23; --bg-3: #212830; --bg-4: #2a313c;
+  --code: #0d1117; --code-line: #151b23;
+  --line: #3d444d; --line-soft: #2a313a;
+  --text: #f0f6fc; --muted: #9198a1; --dim: #7d8590;
+  --accent: #4493f8; --on-accent: #ffffff; --focus: #1f6feb;
+  --attention: #d29922; --flag-attention: #d29922;
+  --success: #3fb950; --approve: #238636; --approve-hover: #29903b; --on-approve: #ffffff;
+  --danger: #f85149; --danger-hover-bg: #da3633; --danger-hover-fg: #ffffff; --danger-hover-border: #da3633;
+  --agent: #ab7df8; --on-agent: #0d1117;
+  --toggle-track: #151b23; --toggle-on-bg: #2a313c; --toggle-on-fg: #f0f6fc; --toggle-on-shadow: 0 0 0 1px #3d444d;
+  --field-bg: #0d1117; --field-ring: 0 0 0 3px rgba(31,111,235,0.35);
+  --gutter-fg: #7d8590;
+  --diff-add-line: rgba(46,160,67,0.15); --diff-add-gutter: rgba(63,185,80,0.3); --diff-add-gutter-fg: #f0f6fc;
+  --diff-del-line: rgba(248,81,73,0.1); --diff-del-gutter: rgba(248,81,73,0.3); --diff-del-gutter-fg: #f0f6fc;
+  --hunk-bg: rgba(56,139,253,0.1); --gap-bg: #151b23; --flag-gutter: #1c2128;
+  --checker-a: #21262d; --checker-b: #161b22;
+  --backdrop: rgba(1,4,9,0.6); --shadow-overlay: 0 8px 24px #010409, 0 0 0 1px #3d444d;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  --fs-2xs: 11px; --fs-xs: 12px; --fs-sm: 12px; --fs-md: 14px; --fs-lg: 14px; --fs-lead: 16px; --fs-title: 16px; --fs-2xl: 20px;
+  --fs-code: 12px; --lh-code: 20px; --btn-weight: 500;
+  --label-font: var(--sans); --label-size: 12px; --label-weight: 600; --label-tracking: 0; --label-case: none; --caps-case: none;
+  --brand-fg: #f0f6fc; --brand-size: 14px; --brand-weight: 600; --brand-tracking: 0; --brand-case: none;
+}
+
+/* --- Threshold: amber on warm dark ---------------------------------- */
+[data-theme="threshold"] {
+  color-scheme: dark;
+  --bg: #16100b; --bg-2: #1d150e; --bg-3: #271a10; --bg-4: #33210f;
+  /* The reading surface is neutral; the furniture stays warm. An hour of
+     code on a brown field is muddy, and the amber identity belongs to the
+     chrome — the rail, the inbox, the header — not to the thing being
+     read. */
+  --code: #0e0e11; --code-line: #1b1b20;
+  --line: #3d2a19; --line-soft: #2c1e12;
+  --text: #f5ece0; --muted: #bcaa95; --dim: #a08d78;
+  --accent: #e6ad6a; --on-accent: #2b1a06; --focus: #e6ad6a;
+  --attention: #e6ad6a; --flag-attention: #d8a63f;
+  --success: #5fd897; --approve: #5fd897; --approve-hover: #6fe0a2; --on-approve: #06261a;
+  --danger: #ef7a74; --danger-hover-bg: color-mix(in srgb, #ef7a74 14%, transparent); --danger-hover-fg: #ef7a74; --danger-hover-border: color-mix(in srgb, #ef7a74 45%, transparent);
+  --agent: #5fd897; --on-agent: #06261a;
+  --toggle-track: transparent; --toggle-on-bg: #e6ad6a; --toggle-on-fg: #2b1a06; --toggle-on-shadow: none;
+  --field-bg: #271a10; --field-ring: none;
+  --gutter-fg: #8b8b98;
+  --diff-add-line: rgba(95,216,151,0.13); --diff-add-gutter: #14201a; --diff-add-gutter-fg: #7fdcaa;
+  --diff-del-line: rgba(239,122,116,0.13); --diff-del-gutter: #241517; --diff-del-gutter-fg: #8b8b98;
+  --hunk-bg: #1b1b20; --gap-bg: #16161c; --flag-gutter: #222028;
+  --checker-a: #2a2a30; --checker-b: #1f1f24;
+  --backdrop: rgba(0,0,0,0.55); --shadow-overlay: 0 18px 48px rgba(0,0,0,0.5);
+  --mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+  --fs-2xs: 10px; --fs-xs: 11px; --fs-sm: 12px; --fs-md: 13px; --fs-lg: 14px; --fs-lead: 15px; --fs-title: 16px; --fs-2xl: 20px;
+  --fs-code: 13px; --lh-code: 1.5; --btn-weight: 400;
+  --label-font: var(--mono); --label-size: 11px; --label-weight: 400; --label-tracking: 0.07em; --label-case: none; --caps-case: uppercase;
+  --brand-fg: #e6ad6a; --brand-size: 11px; --brand-weight: 700; --brand-tracking: 0.12em; --brand-case: uppercase;
+}
+
+/* --- Shared --------------------------------------------------------- */
+:root {
+  --rail: 340px;
+  /* The two sticky dividers in the reading pane stack: a file band, and
+     the hunk header under it. */
+  --band: 30px;
+  --hunk-head: 26px;
+  --r-sm: 4px; --r-md: 6px; --r-lg: 8px; --r-xl: 12px;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--text); font: var(--fs-md)/1.55 var(--sans); overflow: hidden; user-select: none; -webkit-font-smoothing: antialiased; }
+#app { height: 100%; display: flex; flex-direction: column; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+/* One focus ring for everything, shown for the keyboard and not the mouse. */
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+::selection { background: color-mix(in srgb, var(--accent) 25%, transparent); }
+.muted { color: var(--muted); }
+
+/* --- Header -------------------------------------------------------- */
+
+.bar { display: flex; align-items: center; gap: 10px; padding: 0 12px; height: 44px; border-bottom: 1px solid var(--line); background: var(--bg-2); flex: 0 0 auto; }
+/* The title is what gives way when the bar is narrow; a control that
+   wraps onto two lines reads as two controls. */
+.bar .btn, .bar .toggle-btn { white-space: nowrap; flex: 0 0 auto; }
+.brand { display: flex; align-items: center; gap: 7px; flex: 0 0 auto; }
+.brand-mark { width: 13px; height: 13px; border: 2px solid var(--brand-fg); border-radius: 50%; position: relative; }
+.brand-mark::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--brand-fg); }
+.brand-name { font-weight: var(--brand-weight); font-size: var(--brand-size); letter-spacing: var(--brand-tracking); text-transform: var(--brand-case); color: var(--brand-fg); }
+.repo-path { font-family: var(--mono); font-size: var(--fs-sm); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1 1 auto; min-width: 0; }
+
+.toggle-group { display: flex; border: 1px solid var(--line); border-radius: var(--r-md); overflow: hidden; flex: 0 0 auto; background: var(--toggle-track); }
+.toggle-btn { padding: 6px 11px; font-size: var(--fs-sm); color: var(--muted); }
+.toggle-btn:hover { background: var(--bg-3); color: var(--text); }
+.toggle-btn.active { background: var(--toggle-on-bg); color: var(--toggle-on-fg); box-shadow: var(--toggle-on-shadow); font-weight: 600; }
+.rev-field { width: 150px; font-family: var(--mono); font-size: var(--fs-sm); padding: 4px 8px; flex: 0 0 auto; transition: width 0.15s; }
+.rev-field:focus { width: 230px; }
+.rev-field.active { border-color: var(--accent); color: var(--accent); }
+
+/* --- Three-column body --------------------------------------------- */
+
+.layout { flex: 1; display: flex; min-height: 0; }
+.diff-layout { flex: 1; display: flex; min-height: 0; min-width: 0; }
+.main-col { flex: 1; display: flex; min-width: 0; }
+
+/* Files: name first, directory demoted. A truncated full path makes two
+   files in the same directory indistinguishable, which is the common case. */
+.file-list { width: 210px; flex: 0 0 auto; border-right: 1px solid var(--line); background: var(--bg-2); overflow: auto; }
+.file-row { display: block; width: 100%; padding: 7px 10px 7px 9px; text-align: left; border-bottom: 1px solid var(--line-soft); border-left: 2px solid transparent; }
+.file-row:hover { background: var(--bg-3); }
+.file-row.active { background: var(--bg-3); border-left-color: var(--accent); }
+.file-name { display: flex; align-items: baseline; gap: 6px; }
+.file-base { font-family: var(--mono); font-size: var(--fs-md); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-dir { font-family: var(--mono); font-size: var(--fs-xs); color: var(--dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; margin-top: 1px; }
+.file-counts { display: flex; gap: 7px; margin-top: 3px; font-family: var(--mono); font-size: var(--fs-xs); }
+.file-stat.added { color: var(--success); }
+.file-stat.removed { color: var(--danger); }
+.status-badge { font-family: var(--mono); font-size: var(--fs-2xs); font-weight: 700; width: 14px; height: 14px; line-height: 14px; text-align: center; border-radius: var(--r-sm); flex: 0 0 auto; }
+.status-modified { background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--accent); }
+.status-added { background: color-mix(in srgb, var(--success) 20%, transparent); color: var(--success); }
+.status-deleted { background: color-mix(in srgb, var(--danger) 20%, transparent); color: var(--danger); }
+.status-renamed { background: color-mix(in srgb, var(--muted) 20%, transparent); color: var(--muted); }
+
+/* Diff: the evidence, and the biggest surface on screen. */
+.diff-view { flex: 1; overflow: auto; min-width: 0; background: var(--code); }
+.diff-empty { flex: 1; display: flex; align-items: center; justify-content: center; }
+/* A jump to a hunk lands with its header just under the file band. */
+.hunk { border-bottom: 1px solid var(--code-line); scroll-margin-top: var(--band); }
+/* One line, always: a wrapping header pushes the code down and reads as
+   content rather than as a divider. Sticks under the file band, so the
+   two together say where in which file you are. */
+.hunk-header { display: flex; align-items: baseline; gap: 10px; height: var(--hunk-head); font-family: var(--mono); font-size: var(--fs-sm); color: var(--muted); padding: 5px 12px 0 64px; background: var(--hunk-bg); border-bottom: 1px solid var(--code-line); position: sticky; top: var(--band); z-index: 2; white-space: nowrap; overflow: hidden; }
+.hunk-lines { color: var(--text); flex: 0 0 auto; }
+.hunk-context { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.hunk-meta { display: flex; gap: 7px; flex: 0 0 auto; font-size: var(--fs-xs); }
+.hunk-pos { color: var(--dim); min-width: 3ch; text-align: right; }
+
+/* Where a file's run of hunks begins. Warmer and heavier than a hunk
+   header, because crossing into another file is the bigger boundary. */
+.file-band { display: flex; align-items: center; gap: 8px; height: var(--band); padding: 0 12px; position: sticky; top: 0; z-index: 3; background: var(--bg-3); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: var(--fs-sm); white-space: nowrap; }
+.file-band-path { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.file-band-dir { color: var(--dim); }
+.file-band-base { color: var(--text); font-weight: 600; }
+.file-band-meta { display: flex; gap: 8px; flex: 0 0 auto; font-size: var(--fs-xs); color: var(--dim); }
+.file-band-part { color: var(--accent); }
+.file-run + .file-run { margin-top: 14px; }
+.file-band.just-jumped, .hunk-header.just-jumped { animation: landed 1.6s ease-out; }
+@media (prefers-reduced-motion: reduce) { .file-band.just-jumped, .hunk-header.just-jumped { animation: none; box-shadow: inset 2px 0 0 var(--accent); } }
+
+/* --- The navigator below the chapter: files, then hunks --------------- */
+
+/* The third and fourth levels, under the chapter or file being read. Set
+   in the code face and indented, so they read as parts of the row above
+   rather than as more chapters. */
+.outline { background: var(--bg); border-bottom: 1px solid var(--line-soft); padding: 3px 0 6px; }
+.outline-file, .outline-hunk { display: flex; align-items: baseline; gap: 6px; width: 100%; text-align: left; border-left: 2px solid transparent; font-family: var(--mono); white-space: nowrap; }
+.outline-file { padding: 5px 10px 2px 20px; font-size: var(--fs-sm); color: var(--text); }
+.outline-file .status-badge { align-self: center; }
+.outline-hunk { padding: 2px 10px 2px 42px; font-size: var(--fs-xs); color: var(--muted); }
+.outline.hunks-only .outline-hunk { padding-left: 24px; }
+.outline-file:hover, .outline-hunk:hover { background: var(--bg-3); color: var(--text); }
+.outline-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.outline-lines { flex: 0 0 auto; }
+.outline-context { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; color: var(--dim); }
+.outline-counts { display: flex; gap: 5px; flex: 0 0 auto; margin-left: auto; font-size: var(--fs-xs); }
+/* What is on screen now. Amber on the edge like the active chapter, but
+   quieter: it follows the scroll, it is not a choice the reader made. */
+.outline-file.in-view, .outline-hunk.in-view { border-left-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); color: var(--text); }
+.outline-hunk.in-view .outline-context { color: var(--muted); }
+.file-hunks { color: var(--dim); margin-left: auto; }
+/* min-width:100% keeps short lines full-bleed for the hover target, while
+   max-content lets a long line set the scroll width instead of being
+   silently clipped — code you cannot read is code you cannot approve. */
+.diff-line { display: flex; font-family: var(--mono); font-size: var(--fs-code); line-height: var(--lh-code); white-space: pre; width: max-content; min-width: 100%; }
+/* Line numbers exist because notes are anchored to lines: without them a
+   reviewer cannot tell which line they are commenting on. */
+.diff-gutter { display: flex; align-items: baseline; justify-content: flex-end; gap: 4px; flex: 0 0 58px; text-align: right; padding-right: 10px; color: var(--gutter-fg); font-size: var(--fs-sm); user-select: none; border-right: 1px solid var(--code-line); position: sticky; left: 0; background: var(--code); z-index: 1; }
+.gutter-n { min-width: 22px; }
+.diff-added .diff-gutter { background: var(--diff-add-gutter); }
+.diff-removed .diff-gutter { background: var(--diff-del-gutter); color: var(--diff-del-gutter-fg); }
+.diff-text { padding-left: 10px; padding-right: 16px; flex: 1 0 auto; }
+.diff-context { color: var(--text); }
+.diff-added { background: var(--diff-add-line); }
+.diff-added .diff-text { color: var(--text); }
+.diff-added .diff-gutter { color: var(--diff-add-gutter-fg); }
+.diff-removed { background: var(--diff-del-line); }
+.diff-removed .diff-text { color: var(--text); }
+.diff-line.annotatable { cursor: pointer; }
+.diff-line.annotatable:hover .diff-gutter { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.diff-line.annotatable:hover .diff-text { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+.diff-line.composing .diff-gutter { color: var(--accent); background: color-mix(in srgb, var(--accent) 20%, transparent); }
+
+/* Annotations are margin notes on code — hung off the gutter with a rule,
+   set in the UI face so they never read as source. No bubbles, no avatars. */
+/* A button, so it needs its text alignment stated: the default is centre,
+   which quietly centred every reply. */
+.inline-note { display: block; width: calc(100% - 58px); text-align: left; margin: 0 0 0 58px; padding: 10px 13px; border-left: 2px solid var(--accent); background: var(--code-line); font-family: var(--sans); font-size: var(--fs-md); line-height: 1.55; white-space: normal; position: sticky; left: 58px; max-width: 720px; }
+.inline-note:hover { background: var(--bg-3); }
+/* Inline is a summary — the opening line and the latest answer, clipped.
+   The modal is where a thread is read. */
+.note-latest { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.note-more { font-family: var(--mono); font-size: var(--fs-xs); color: var(--accent); margin-top: 6px; }
+.note-body { display: flex; gap: 8px; align-items: baseline; }
+.note-body + .note-body { margin-top: 7px; padding-top: 7px; border-top: 1px solid var(--line-soft); }
+.note-pending { font-size: var(--fs-xs); margin-top: 5px; color: var(--dim); font-style: italic; }
+.who { font-family: var(--mono); font-size: var(--fs-xs); letter-spacing: 0.04em; flex: 0 0 auto; padding-top: 1px; }
+.who.human { color: var(--accent); }
+.who.agent { color: var(--agent); }
+.composer-row { margin-left: 58px; padding: 8px 10px; background: var(--code-line); border-left: 2px solid var(--accent); }
+.composer { width: 100%; font-size: var(--fs-sm); resize: vertical; font-family: var(--sans); }
+
+/* --- The rail: the agent's case, the conversation, the decision ----- */
+
+.rail { width: var(--rail); flex: 0 0 auto; border-left: 1px solid var(--line); background: var(--bg-2); display: flex; flex-direction: column; min-height: 0; }
+.rail-scroll { flex: 1; overflow: auto; min-height: 0; }
+
+.brief { padding: 14px; border-bottom: 1px solid var(--line); }
+.brief-title { font-size: var(--fs-title); font-weight: 600; line-height: 1.3; margin-bottom: 6px; }
+.brief-summary { font-size: var(--fs-lg); line-height: 1.6; color: var(--text); opacity: 0.88; }
+.brief-implication { font-size: var(--fs-md); line-height: 1.55; margin-top: 8px; padding-left: 14px; position: relative; color: var(--attention); }
+.brief-implication::before { content: "▸"; position: absolute; left: 0; top: 0; }
+
+.thread { padding: 12px 14px; }
+.thread-title { font-family: var(--label-font); font-size: var(--label-size); font-weight: var(--label-weight); letter-spacing: var(--label-tracking); text-transform: var(--caps-case); color: var(--dim); margin-bottom: 8px; }
+.thread-row { display: flex; gap: 8px; align-items: baseline; font-size: var(--fs-md); line-height: 1.55; padding: 5px 0; }
+/* A thread summary, same shape as an inline annotation: the question, the
+   latest answer, and a way in. */
+.thread-row.asked { display: block; width: 100%; text-align: left; padding: 9px 10px; margin: 0 -10px 4px; border-radius: var(--r-md); border-left: 2px solid var(--accent); background: var(--bg-3); }
+.thread-row.asked:hover { background: var(--bg-4); }
+.thread-line { display: flex; gap: 8px; align-items: baseline; }
+.thread-line.latest { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--line-soft); }
+.thread-row.revised { color: var(--agent); font-style: italic; font-size: var(--fs-sm); }
+.thread-input { width: 100%; margin-top: 8px; font-size: var(--fs-sm); }
+.thread-empty { color: var(--dim); font-size: var(--fs-sm); font-style: italic; }
+
+/* The facts sit against the buttons on purpose: the last thing read
+   before deciding, not a banner scrolled past. */
+.facts { padding: 11px 14px; border-top: 1px solid var(--line); background: var(--bg); flex: 0 0 auto; }
+.facts-counts { display: flex; gap: 10px; font-family: var(--mono); font-size: var(--fs-sm); color: var(--muted); }
+.facts-counts .added { color: var(--success); }
+.facts-counts .removed { color: var(--danger); }
+.facts-warn { display: flex; gap: 7px; align-items: baseline; margin-top: 7px; font-size: var(--fs-md); color: var(--danger); }
+.facts-warn.tests { color: var(--attention); }
+.facts-deleted { min-width: 0; flex: 1; }
+.facts-toggle { all: unset; cursor: pointer; color: inherit; }
+.facts-toggle:hover { text-decoration: underline; }
+/* Its own scrolling box, draggable taller, so a mass delete cannot
+   crowd the conversation out of the rail. */
+.facts-files { list-style: none; margin: 5px 0 0; padding: 4px 0; max-height: 160px; overflow: auto; resize: vertical; font-family: var(--mono); font-size: var(--fs-sm); border-top: 1px solid var(--line-soft); }
+.facts-files li { overflow-wrap: anywhere; padding: 1px 0; }
+.facts-source { display: flex; gap: 8px; align-items: baseline; font-family: var(--mono); font-size: var(--fs-sm); color: var(--accent); margin-bottom: 7px; }
+/* Quiet on purpose: a pinned review is the expected case, so it reports
+   rather than announces. The unpinned warning is what carries colour. */
+.facts-pin { color: var(--muted); }
+.facts-warn.unpinned { color: var(--attention); }
+
+.action-bar { padding: 12px 14px; border-top: 1px solid var(--line); background: var(--bg); display: flex; flex-direction: column; gap: 8px; flex: 0 0 auto; }
+.action-row { display: flex; gap: 8px; }
+.action-row .btn { flex: 1; }
+.decided { padding: 14px; text-align: center; font-weight: 600; border-top: 1px solid var(--line); }
+.decided-approved { color: var(--success); }
+.decided-rejected { color: var(--danger); }
+
+/* --- Controls ------------------------------------------------------- */
+
+.field { background: var(--field-bg); border: 1px solid var(--line); border-radius: var(--r-md); padding: 7px 9px; color: var(--text); font: inherit; }
+.field:focus { outline: none; border-color: var(--accent); }
+.field::placeholder { color: var(--dim); }
+
+.btn { padding: 7px 13px; border-radius: var(--r-md); background: var(--bg-3); border: 1px solid var(--line); font-size: var(--fs-md); }
+.btn:hover { background: var(--bg-4); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.btn.small { padding: 6px 10px; font-size: var(--fs-sm); }
+.btn.primary { background: var(--approve); color: var(--on-approve); font-weight: 600; border-color: transparent; }
+.btn.primary:hover { background: var(--approve-hover); }
+.btn.danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 45%, transparent); }
+.btn.danger:hover { background: var(--danger-hover-bg); color: var(--danger-hover-fg); border-color: var(--danger-hover-border); }
+.btn.ghost { background: transparent; }
+.btn { font-weight: var(--btn-weight); }
+.btn.primary { font-weight: 600; }
+.btn:not(:disabled):active { background: var(--bg-4); }
+.btn.primary:not(:disabled):active { background: var(--approve-hover); }
+.field:focus { box-shadow: var(--field-ring); }
+/* Colour changes on hover ease in rather than snap. */
+.btn, .toggle-btn, .field, .review-row, .toc-row, .file-row, .chat-card, .thread-row.asked, .anchor-chip, .thread-anchor, .review-archive, .gap-btn { transition: background-color 80ms ease-out, border-color 80ms ease-out, color 80ms ease-out, box-shadow 80ms ease-out; }
+@media (prefers-reduced-motion: reduce) { .btn, .toggle-btn, .field, .review-row, .toc-row, .file-row, .chat-card, .thread-row.asked, .anchor-chip, .thread-anchor, .review-archive, .gap-btn { transition: none; } }
+
+.error { margin: 8px 14px 0; padding: 8px 11px; border-radius: var(--r-md); background: color-mix(in srgb, var(--danger) 12%, transparent); border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent); color: var(--danger); font-size: var(--fs-sm); flex: 0 0 auto; }
+.empty-state { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; text-align: center; }
+.empty { padding: 20px; text-align: center; }
+
+/* --- History -------------------------------------------------------- */
+
+.history { flex: 1; overflow: auto; padding: 14px; }
+.back-btn { margin-bottom: 12px; }
+.history-row { display: flex; gap: 10px; align-items: baseline; padding: 9px 0; border-bottom: 1px solid var(--line-soft); font-size: var(--fs-sm); }
+.verdict-badge { font-family: var(--mono); font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: 0.06em; padding: 3px 7px; border-radius: var(--r-sm); flex: 0 0 auto; }
+.verdict-approved { background: color-mix(in srgb, var(--success) 16%, transparent); color: var(--success); }
+.verdict-rejected { background: color-mix(in srgb, var(--danger) 16%, transparent); color: var(--danger); }
+.history-time { font-family: var(--mono); font-size: var(--fs-xs); flex: 0 0 auto; }
+.history-stats { font-family: var(--mono); font-size: var(--fs-xs); flex: 0 0 auto; }
+.history-source { font-family: var(--mono); font-size: var(--fs-2xs); color: var(--accent); flex: 0 0 auto; }
+.history-reason { flex: 1; }
+
+/* Without a session there is no case to argue and no thread, so the rail
+   is dropped and its two remaining jobs — state the facts, take the
+   decision — become a footer. A 340px empty column would be worse than
+   no column. */
+.shell { flex: 1; display: flex; min-height: 0; }
+.shell > * { flex: 1; min-width: 0; }
+.solo { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.solo .main-col { flex: 1; min-height: 0; }
+.footer { display: flex; align-items: center; gap: 16px; border-top: 1px solid var(--line); background: var(--bg-2); flex: 0 0 auto; padding: 0 14px; }
+.footer .facts { border-top: 0; background: transparent; padding: 10px 0; display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; }
+.footer .facts-source { margin-bottom: 0; flex: 0 0 auto; }
+.footer .facts-warn { margin-top: 0; }
+.footer .action-bar { border-top: 0; background: transparent; flex-direction: row; align-items: center; padding: 10px 0; flex: 0 0 auto; }
+.footer .action-bar .field { width: 300px; }
+.footer .action-row { flex: 0 0 auto; }
+
+/* --- Narrative view -------------------------------------------------- */
+
+.reading { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.modebar { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-bottom: 1px solid var(--line); background: var(--bg-2); flex: 0 0 auto; }
+.coverage { font-family: var(--mono); font-size: var(--fs-sm); color: var(--dim); }
+/* Loud when the narrative does not account for the whole diff: an
+   unclaimed hunk is what a narrative could otherwise hide. */
+.coverage.warn { color: var(--danger); }
+
+.chapter { border-bottom: 1px solid var(--line); }
+.chapter-head { display: flex; gap: 11px; align-items: baseline; padding: 16px 14px 12px; background: var(--code); }
+.chapter-n { font-family: var(--mono); font-size: var(--fs-xs); color: var(--accent); border: 1px solid var(--line); border-radius: var(--r-sm); width: 20px; height: 20px; line-height: 18px; text-align: center; flex: 0 0 auto; }
+.chapter-n.warn { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 50%, transparent); }
+.chapter-title { font-size: var(--fs-lead); font-weight: 600; }
+.chapter-summary { font-size: var(--fs-md); color: var(--muted); margin-top: 5px; max-width: 68ch; line-height: 1.6; }
+.chapter-empty { padding: 0 14px 12px; font-size: var(--fs-sm); }
+.chapter.unbundled .chapter-title { color: var(--danger); }
+.chapter.unbundled { background: color-mix(in srgb, var(--danger) 5%, transparent); }
+
+/* --- The inbox ------------------------------------------------------- */
+
+/* Outside the review layout, because it outlives any single review: the
+   list is built from ~/.threshold/reviews and does not care whether the
+   agent that wrote a review is still running. */
+.workspace { flex: 1; display: flex; min-height: 0; }
+.workspace-main { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+
+.inbox { width: 240px; flex: 0 0 auto; border-right: 1px solid var(--line); background: var(--bg-2); display: flex; flex-direction: column; min-height: 0; }
+.inbox-head { display: flex; align-items: center; justify-content: space-between; padding: 9px 10px 9px 12px; border-bottom: 1px solid var(--line); flex: 0 0 auto; }
+.inbox-title { font-family: var(--label-font); font-size: var(--label-size); font-weight: var(--label-weight); letter-spacing: var(--label-tracking); text-transform: var(--label-case); color: var(--dim); }
+.inbox-list { flex: 1; overflow: auto; }
+.inbox-group { font-family: var(--label-font); font-size: var(--label-size); font-weight: var(--label-weight); letter-spacing: var(--label-tracking); text-transform: var(--label-case); color: var(--dim); padding: 11px 12px 5px; }
+.inbox-empty { padding: 16px 12px; font-size: var(--fs-sm); line-height: 1.55; }
+.inbox-empty p { margin: 0 0 7px; }
+
+.review-row { display: block; width: 100%; text-align: left; padding: 8px 12px; border-left: 2px solid transparent; border-bottom: 1px solid var(--line-soft); }
+.review-row:hover { background: var(--bg-3); }
+.review-row.active { background: var(--bg-3); border-left-color: var(--accent); }
+/* Decided reviews stay listed — the conversation is worth reading next to
+   the verdict — but recede so what is waiting reads first. */
+.review-row.decided { opacity: 0.5; }
+.review-row.decided:hover { opacity: 0.8; }
+.review-title { font-size: var(--fs-md); line-height: 1.4; margin-bottom: 3px; }
+.review-meta { display: flex; gap: 7px; align-items: baseline; font-family: var(--mono); font-size: var(--fs-xs); color: var(--dim); }
+.review-repo { color: var(--muted); }
+.review-rev { color: var(--accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 90px; }
+.review-age { margin-left: auto; flex: 0 0 auto; }
+.btn.ghost.on { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+
+/* Threshold's own findings. A third voice: not the agent, not you — the
+   tool reporting a fact about what it was handed. Coral because every
+   diagnostic is something that needs fixing, but deliberately not styled
+   as an error banner, since none of them block the review. */
+.diagnostics { padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.diagnostic + .diagnostic { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line-soft); }
+.diag-code { font-family: var(--mono); font-size: var(--fs-xs); letter-spacing: 0.04em; color: var(--danger); margin-bottom: 4px; }
+.diag-message { font-size: var(--fs-md); line-height: 1.55; }
+.diag-detail { font-family: var(--mono); font-size: var(--fs-sm); color: var(--dim); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Toasts. Threshold is meant to sit open in the background, so an arrival
+   has to register without the user watching the window. Bottom-left, away
+   from the Approve/Reject buttons — nothing here should be near a click
+   that decides something. */
+.toasts { position: fixed; left: 14px; bottom: 14px; display: flex; flex-direction: column-reverse; gap: 8px; z-index: 50; }
+.toast { display: flex; align-items: center; gap: 9px; max-width: 380px; text-align: left; padding: 10px 13px; border-radius: var(--r-lg); background: var(--bg-3); border: 1px solid var(--line); box-shadow: var(--shadow-overlay); font-size: var(--fs-sm); animation: toast-in 0.18s ease-out; }
+.toast:hover { border-color: var(--accent); }
+.toast-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex: 0 0 auto; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .toast { animation: none; } }
+
+/* --- Table of contents ----------------------------------------------- */
+
+/* The narrative's navigator, in the same column the file list occupies in
+   the file view. Same slot, same job: know where you are, go elsewhere.
+   Full height and independently scrollable, because navigation that
+   scrolls away with the content is not navigation. */
+.toc { width: 232px; flex: 0 0 auto; border-right: 1px solid var(--line); background: var(--bg-2); display: flex; flex-direction: column; min-height: 0; }
+.toc-head { display: flex; align-items: baseline; justify-content: space-between; padding: 10px 12px 8px; border-bottom: 1px solid var(--line-soft); flex: 0 0 auto; }
+.toc-progress { font-family: var(--mono); font-size: var(--fs-sm); color: var(--muted); }
+.toc-keys { font-family: var(--mono); font-size: var(--fs-sm); color: var(--dim); letter-spacing: 0.1em; }
+.toc-list { flex: 1; overflow: auto; }
+
+.toc-row { display: flex; gap: 9px; width: 100%; text-align: left; padding: 9px 12px; border-left: 2px solid transparent; border-bottom: 1px solid var(--line-soft); align-items: baseline; }
+.toc-row:hover { background: var(--bg-3); }
+.toc-row.active { background: var(--bg-3); border-left-color: var(--accent); }
+/* The number is the address and never disappears; the mark rides beside
+   it. Losing your position the moment a chapter is dealt with is exactly
+   backwards. */
+.toc-n { font-family: var(--mono); font-size: var(--fs-sm); color: var(--dim); flex: 0 0 auto; min-width: 11px; }
+.toc-row.active .toc-n { color: var(--accent); }
+.toc-n.warn { color: var(--danger); }
+.toc-body { flex: 1; min-width: 0; }
+.toc-label { display: block; font-size: var(--fs-md); line-height: 1.4; }
+/* A read chapter recedes. It does not celebrate — this is progress, not
+   approval, and the colour should not suggest a verdict. */
+.toc-row.mark-ok .toc-label { color: var(--muted); }
+.toc-meta { display: flex; gap: 8px; font-family: var(--mono); font-size: var(--fs-xs); color: var(--dim); margin-top: 3px; }
+.toc-open { color: var(--accent); }
+.toc-mark { font-family: var(--mono); font-size: var(--fs-sm); flex: 0 0 auto; }
+.toc-mark.ok { color: var(--success); opacity: 0.7; }
+.toc-mark.concern { color: var(--danger); }
+.toc-row.unbundled .toc-label { color: var(--danger); }
+.toc-concerns { font-size: var(--fs-xs); color: var(--danger); padding: 9px 12px; border-top: 1px solid var(--line-soft); flex: 0 0 auto; }
+
+/* --- Per-chapter sign-off -------------------------------------------- */
+
+/* Marks are progress, not a verdict, so the chapter tint is quiet: it
+   says "you have been here", not "this is approved". */
+.chapter.mark-ok .chapter-head { opacity: 0.62; }
+.chapter.mark-concern { box-shadow: inset 3px 0 0 var(--danger); }
+.chapter-foot { padding: 12px 14px 18px; border-top: 1px solid var(--code-line); background: var(--code); }
+.chapter-actions { display: flex; gap: 7px; }
+/* A marked chapter must not wear the Approve button's green. Marks are
+   progress; approval is a decision, and the only control on screen
+   entitled to that colour is the one that makes it. Marked reads as
+   quietly settled instead. */
+.btn.marked { background: transparent; border-color: color-mix(in srgb, var(--success) 40%, transparent); color: var(--success); opacity: 0.85; }
+.btn.marked:hover { background: color-mix(in srgb, var(--success) 10%, transparent); }
+.btn.flagged { background: color-mix(in srgb, var(--danger) 12%, transparent); border-color: color-mix(in srgb, var(--danger) 50%, transparent); color: var(--danger); }
+.chapter-composer { max-width: 640px; }
+.chapter-foot .inline-note { margin: 0 0 8px; position: static; }
+
+/* Which review you are in, where the repo path sits when you are not.
+   Once a review is open its title is the more useful of the two. */
+.crumb { display: flex; align-items: baseline; gap: 9px; flex: 1 1 auto; min-width: 0; }
+.crumb-title { font-size: var(--fs-lg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.crumb-repo { font-family: var(--mono); font-size: var(--fs-sm); color: var(--dim); flex: 0 0 auto; }
+/* How big the change is, beside what it is: the number time gets
+   budgeted by. Never truncated away — the title gives way first. */
+.crumb-size { display: flex; gap: 7px; align-items: baseline; font-family: var(--mono); font-size: var(--fs-sm); flex: 0 0 auto; }
+.size-total { color: var(--muted); }
+.review-size { display: flex; gap: 7px; align-items: baseline; font-family: var(--mono); font-size: var(--fs-xs); margin-top: 2px; }
+
+/* Chapter paging. A chapter fills the pane, so it can be scrolled to its
+   own top and bottom; moving between chapters replaces the content
+   instead of scrolling through everything that came before. */
+.diff-view.narrative { display: flex; flex-direction: column; }
+.diff-view.narrative .chapter { border-bottom: 0; flex: 0 0 auto; }
+.chapter-nav { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px 20px; margin-top: auto; border-top: 1px solid var(--code-line); background: var(--code); }
+.chapter-nav-pos { font-family: var(--mono); font-size: var(--fs-sm); }
+
+/* --- Thread modal ---------------------------------------------------- */
+
+/* An in-app overlay, never a browser dialog: nothing here should be able
+   to block the app, and the conversation stays inside the tool. */
+.modal-backdrop { position: fixed; inset: 0; background: var(--backdrop); display: flex; align-items: center; justify-content: center; padding: 40px; z-index: 100; }
+.modal { width: min(680px, 100%); max-height: 100%; display: flex; flex-direction: column; background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--r-xl); box-shadow: var(--shadow-overlay); overflow: hidden; }
+.modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.modal-anchor { min-width: 0; }
+/* The anchor is restated because a thread read away from the diff loses
+   the context that gives it meaning. */
+.modal-where { font-family: var(--mono); font-size: var(--fs-sm); color: var(--accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.modal-line { font-family: var(--mono); font-size: var(--fs-sm); color: var(--dim); margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.modal-thread { flex: 1; overflow: auto; padding: 14px 16px; }
+.modal-msg { display: flex; gap: 10px; align-items: baseline; padding: 9px 0; }
+.modal-msg + .modal-msg { border-top: 1px solid var(--line-soft); }
+.modal-text { flex: 1; font-size: var(--fs-md); line-height: 1.6; white-space: pre-wrap; }
+.modal-foot { padding: 12px 16px; border-top: 1px solid var(--line); background: var(--bg); }
+.modal-foot .composer { width: 100%; }
+
+/* --- Claude's pre-review flags --------------------------------------- */
+
+/* Deliberately clear of the meanings already spoken for: green is
+   approval and only approval, and plain amber is the reviewer's own
+   voice. These are a third party pointing at something. */
+.gutter-flag { font-size: var(--fs-2xs); line-height: 1; flex: 0 0 auto; }
+.gutter-flag.attention { color: var(--flag-attention); }
+.gutter-flag.caution { color: var(--danger); }
+.gutter-flag.context { color: var(--dim); }
+
+/* The line itself is tinted only faintly. A flag says "read this", not
+   "something is wrong here", and a loud row would fight the added and
+   removed colours that carry the diff's own meaning. */
+.diff-line.flagged .diff-gutter { background: var(--flag-gutter); }
+.diff-line.flag-caution .diff-gutter { background: color-mix(in srgb, var(--danger) 14%, transparent); }
+.diff-line.flag-attention .diff-gutter { background: color-mix(in srgb, var(--flag-attention) 14%, transparent); }
+
+.who.flag { font-family: var(--mono); font-size: var(--fs-xs); letter-spacing: 0.04em; white-space: nowrap; }
+.who.flag.attention { color: var(--flag-attention); }
+.who.flag.caution { color: var(--danger); }
+.who.flag.context { color: var(--muted); }
+
+.toc-flag { font-family: var(--mono); font-size: var(--fs-xs); }
+.toc-flag.caution { color: var(--danger); }
+.toc-flag.attention { color: var(--flag-attention); }
+
+/* --- Conversation index ---------------------------------------------- */
+
+.thread-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+.thread-count { font-family: var(--mono); font-size: var(--fs-xs); color: var(--dim); }
+.thread-count.waiting { color: var(--attention); }
+
+/* Two actions per row: read the thread, or go to where it lives. Nested
+   buttons would be invalid, so the row is a container and each action is
+   its own control. */
+.thread-row.asked { display: flex; align-items: flex-start; gap: 8px; padding: 9px 10px; margin: 0 -10px 4px; border-radius: var(--r-md); border-left: 2px solid transparent; background: var(--bg-3); }
+.thread-row.asked:hover { background: var(--bg-4); }
+/* Waiting on Claude is the state worth spotting; being on the chapter you
+   are reading is worth noticing but not announcing. */
+.thread-row.asked.waiting { border-left-color: var(--attention); }
+.thread-row.asked.here { box-shadow: inset 0 0 0 1px var(--line); }
+.thread-open { flex: 1; min-width: 0; text-align: left; }
+.thread-anchor { flex: 0 0 auto; font-family: var(--mono); font-size: var(--fs-xs); color: var(--dim); padding: 3px 7px; border: 1px solid var(--line); border-radius: var(--r-sm); max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.thread-anchor:hover { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
+
+/* A jump lands somewhere; the eye needs telling where. */
+.diff-line.just-jumped { animation: landed 1.6s ease-out; }
+@keyframes landed {
+  0%, 30% { background: color-mix(in srgb, var(--accent) 22%, transparent); }
+  100% { background: transparent; }
+}
+@media (prefers-reduced-motion: reduce) { .diff-line.just-jumped { animation: none; box-shadow: inset 2px 0 0 var(--accent); } }
+
+/* An annotation whose line has moved under it. Dimmed rather than hidden:
+   what Claude said is still worth reading, it is just no longer a claim
+   about the line it is sitting on, and the line it *was* about is shown
+   above it so the reviewer can judge that for themselves. */
+.inline-note.stale { border-left-color: var(--dim); opacity: 0.75; }
+.note-stale { display: flex; gap: 7px; align-items: baseline; font-size: var(--fs-sm); color: var(--dim); margin-bottom: 4px; }
+.note-stale .who.stale { color: var(--dim); text-transform: uppercase; letter-spacing: 0.06em; font-size: var(--fs-2xs); }
+.note-stale span:last-child { font-family: var(--mono); white-space: pre-wrap; }
+
+/* The diff moved under the reader. Sits above the diff, not in the rail
+   with the other diagnostics: it is not a remark about the review, it is
+   a statement that what is on screen is out of date. Coral, and not
+   dismissable — only a reload clears it. */
+.drift {
+  display: flex; gap: 10px; align-items: center;
+  padding: 9px 14px; flex: 0 0 auto;
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+  border-bottom: 1px solid var(--danger);
+  font-size: var(--fs-md); color: var(--text);
+}
+.drift-mark { color: var(--danger); }
+.drift-text { flex: 1; min-width: 0; }
+
+/* --- Two panes: review and chat -------------------------------------- */
+
+/* The review pane follows the reader and nothing else. The modal opened
+   from a note sits over it alone, so the conversation beside it stays
+   readable and usable. */
+.main-col { position: relative; }
+.main-col > .modal-backdrop { position: absolute; padding: 28px; z-index: 40; }
+
+.nav-group { display: flex; gap: 2px; }
+.nav-btn { padding: 4px 8px; font-family: var(--mono); }
+
+/* The chat pane: a channel of every conversation, then one thread at a
+   time. Its own scroll, its own composer, its own place. */
+.rail { width: 380px; }
+.chat { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.chat-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 12px; border-bottom: 1px solid var(--line); flex: 0 0 auto; }
+.chat-head .thread-title { margin-bottom: 0; }
+.chat-head.thread { justify-content: flex-start; }
+.chat-head-meta { display: flex; gap: 8px; align-items: center; }
+.chat-thread-where { flex: 1; min-width: 0; font-family: var(--mono); font-size: var(--fs-sm); color: var(--accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-scroll { flex: 1; overflow: auto; min-height: 0; padding: 10px 12px; user-select: text; }
+.chat-foot { padding: 10px 12px; border-top: 1px solid var(--line); background: var(--bg); flex: 0 0 auto; }
+.chat-foot .composer { width: 100%; }
+
+.chat-brief { margin: -10px -12px 10px; }
+.chat-divider { display: flex; align-items: center; gap: 8px; margin: 10px 0; font-family: var(--mono); font-size: var(--fs-xs); color: var(--agent); }
+.chat-divider::before, .chat-divider::after { content: ""; flex: 1; border-top: 1px solid var(--line-soft); }
+.chat-divider span { max-width: 80%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.chat-card { margin: 0 0 8px; border-radius: var(--r-lg); background: var(--bg-3); border-left: 2px solid transparent; }
+.chat-card:hover { background: var(--bg-4); }
+.chat-card.waiting { border-left-color: var(--attention); }
+/* New from Claude: the one state worth finding at a glance. */
+.chat-card.unread { border-left-color: var(--agent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--agent) 25%, transparent); }
+.chat-card-top { display: flex; align-items: center; gap: 7px; padding: 8px 10px 0; }
+.chat-card-top .msg-time { margin-left: auto; }
+.chat-card-body { display: block; width: 100%; text-align: left; padding: 6px 10px 9px; }
+.chat-root-text { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.chat-card-foot { display: flex; gap: 10px; align-items: baseline; margin-top: 6px; font-family: var(--mono); font-size: var(--fs-xs); color: var(--dim); }
+.chat-card-foot .note-pending { margin-top: 0; }
+
+.anchor-chip { font-family: var(--mono); font-size: var(--fs-xs); color: var(--muted); padding: 2px 7px; border: 1px solid var(--line); border-radius: var(--r-sm); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.anchor-chip:not(:disabled):hover { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
+.anchor-chip:disabled { cursor: default; opacity: 0.8; }
+.anchor-chip.outdated { text-decoration: line-through; text-decoration-color: var(--dim); }
+
+.unread-badge { font-family: var(--mono); font-size: var(--fs-xs); color: var(--on-agent); background: var(--agent); border-radius: 999px; padding: 1px 7px; font-weight: 600; }
+.unread-badge.button:hover { background: color-mix(in srgb, var(--agent) 85%, var(--text)); }
+.unread-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--agent); margin-right: 6px; vertical-align: middle; }
+.inline-note.unread { border-left-color: var(--agent); }
+
+.chat-pointers { margin: 0 0 8px; padding: 8px 10px; border-radius: var(--r-lg); border: 1px dashed var(--line); }
+.chat-pointers summary { cursor: pointer; font-family: var(--mono); font-size: var(--fs-xs); color: var(--muted); }
+.pointer-row { display: flex; gap: 8px; align-items: baseline; margin-top: 7px; }
+.pointer-text { flex: 1; min-width: 0; text-align: left; font-size: var(--fs-md); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pointer-text:hover { color: var(--text); }
+
+.chat-diagnostic { margin: 0 0 8px; padding: 7px 10px; border-radius: var(--r-lg); background: color-mix(in srgb, var(--danger) 6%, transparent); }
+.chat-diagnostic summary { cursor: pointer; display: flex; gap: 8px; align-items: baseline; }
+.chat-diagnostic .diag-code { margin-bottom: 0; flex: 0 0 auto; }
+.chat-diagnostic .diag-message { font-size: var(--fs-sm); color: var(--muted); }
+.chat-diagnostic.retired { background: transparent; border: 1px dashed var(--line-soft); opacity: 0.7; }
+.chat-diagnostic.retired .diag-code { text-decoration: line-through; }
+.chat-diagnostic .diag-retired { margin-left: auto; font-size: var(--fs-xs); color: var(--success); flex: 0 0 auto; }
+
+.chat-code { margin: 0 0 10px; padding: 8px 10px; border-radius: var(--r-md); background: var(--code); font-family: var(--mono); font-size: var(--fs-sm); color: var(--muted); white-space: pre-wrap; word-break: break-word; }
+
+/* One message in a thread, in the modal and the chat pane alike. */
+.msg { padding: 9px 0; }
+.msg + .msg { border-top: 1px solid var(--line-soft); }
+.msg-head { display: flex; gap: 8px; align-items: baseline; margin-bottom: 3px; }
+.msg-time { font-family: var(--mono); font-size: var(--fs-xs); color: var(--dim); }
+.msg-text { font-size: var(--fs-md); line-height: 1.6; white-space: pre-wrap; user-select: text; }
+.who.threshold { color: var(--danger); }
+.modal-head .modal-anchor { flex: 1; }
+
+/* --- Expanding context ----------------------------------------------- */
+
+/* The unchanged code between hunks, opened on request. Quieter than the
+   change itself: it is there to answer a question about the hunk, not to
+   be reviewed. */
+.gap-bar { display: flex; align-items: center; gap: 6px; min-width: 100%; width: max-content; background: var(--gap-bg); border-top: 1px solid var(--code-line); border-bottom: 1px solid var(--code-line); font-family: var(--mono); font-size: var(--fs-sm); }
+.gap-gutter { flex: 0 0 58px; text-align: right; padding: 4px 10px 4px 0; color: var(--dim); border-right: 1px solid var(--code-line); position: sticky; left: 0; background: var(--gap-bg); }
+.gap-btn { padding: 3px 9px; margin: 2px 0; border-radius: var(--r-sm); color: var(--muted); }
+.gap-btn:hover { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.gap-note { color: var(--dim); padding: 0 6px; }
+.diff-line.expanded .diff-text { color: var(--muted); }
+
+/* --- Inbox: views, projects, archive ---------------------------------- */
+
+.inbox-head { gap: 8px; }
+.inbox-views .toggle-btn { padding: 4px 9px; font-size: var(--fs-sm); }
+.inbox-tools { display: flex; gap: 6px; align-items: center; padding: 7px 10px; border-bottom: 1px solid var(--line); flex: 0 0 auto; }
+.inbox-tools .toggle-btn { padding: 4px 8px; font-size: var(--fs-xs); }
+.inbox-project { flex: 1; min-width: 0; font-size: var(--fs-sm); padding: 4px 6px; }
+.inbox-group { display: flex; flex-direction: column; gap: 1px; }
+.inbox-group-detail { font-size: var(--fs-2xs); color: var(--dim); text-transform: none; letter-spacing: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* A row holds two actions: open it, or put it away. */
+.review-row { display: flex; align-items: stretch; padding: 0; position: relative; }
+.review-open { flex: 1; min-width: 0; display: block; text-align: left; padding: 8px 12px; }
+.review-archive { flex: 0 0 auto; align-self: center; margin-right: 8px; padding: 3px 7px; border-radius: var(--r-sm); border: 1px solid var(--line); font-size: var(--fs-xs); color: var(--muted); background: var(--bg-2); opacity: 0; }
+/* Present on hover and on the review being read; hidden otherwise, so the
+   list reads as titles rather than as a column of buttons. */
+.review-row:hover .review-archive, .review-row.active .review-archive, .review-archive:focus-visible { opacity: 1; }
+.review-archive:hover { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
+.review-row.decided .review-archive { opacity: 0; }
+.review-row.decided:hover .review-archive { opacity: 1; }
+
+/* --- Phone access -------------------------------------------------- */
+
+.phone-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+.phone-view { flex: 1; overflow: auto; padding: 14px 20px; max-width: 720px; user-select: text; }
+.phone-view h2 { font-size: var(--fs-title); margin: 14px 0 6px; }
+.phone-view h3 { font-family: var(--label-font); font-size: var(--label-size); font-weight: var(--label-weight); letter-spacing: var(--label-tracking); text-transform: var(--label-case); color: var(--muted); margin: 22px 0 8px; }
+.phone-cmd { font-family: var(--mono); background: var(--bg-3); padding: 8px 10px; border-radius: var(--r-sm); }
+/* The machine's colour, full strength: this is where the person learns
+   which colour means this Mac. */
+.phone-machine { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 12px 14px; border-left: 6px solid var(--machine); background: var(--bg-2); border-radius: var(--r-sm); }
+.phone-swatch { width: 28px; height: 28px; border-radius: 50%; background: var(--machine); flex: 0 0 auto; }
+.phone-name { font-size: var(--fs-2xl); font-weight: 600; }
+.phone-url { font-family: var(--mono); font-size: var(--fs-xs); }
+.phone-pair { display: flex; gap: 20px; align-items: flex-start; }
+/* White behind the code whatever the theme: a phone camera reads dark
+   modules on a light field. */
+.phone-qr { background: #fff; padding: 8px; border-radius: var(--r-md); line-height: 0; flex: 0 0 auto; }
+.phone-qr svg { width: 240px; height: 240px; }
+.phone-steps { margin: 0; padding-left: 18px; color: var(--muted); }
+.phone-steps li { margin-bottom: 8px; }
+
+/* --- Markdown, rendered -------------------------------------------- */
+
+/* Read as a document, on the reading surface, in the sans face. What the
+   diff changed is a bar in the left margin, so the prose stays unbroken. */
+.md-toggle { margin-left: 8px; height: 22px; }
+.md-toggle .toggle-btn { padding: 0 8px; font-size: var(--fs-xs); line-height: 20px; }
+.file-band-meta { align-items: center; }
+.md-fold { display: block; width: 100%; margin: 4px 0 14px; padding: 4px 10px; text-align: left; font: var(--fs-xs) var(--mono); color: var(--dim); border: 1px dashed var(--line); border-radius: var(--r-sm); }
+.md-fold:hover { color: var(--text); background: var(--bg-2); }
+.md-doc { background: var(--code); padding: 16px 28px 28px 34px; font: var(--fs-lg)/1.65 var(--sans); color: var(--text); user-select: text; max-width: 860px; }
+.md-doc > :first-child { margin-top: 0; }
+.md-doc h1, .md-doc h2, .md-doc h3, .md-doc h4 { line-height: 1.3; margin: 1.4em 0 .5em; }
+.md-doc h1 { font-size: 1.6em; } .md-doc h2 { font-size: 1.3em; } .md-doc h3 { font-size: 1.1em; } .md-doc h4 { font-size: 1em; }
+.md-doc p, .md-doc ul, .md-doc ol, .md-doc blockquote, .md-doc table, .md-doc pre { margin: 0 0 .9em; }
+.md-doc ul, .md-doc ol { padding-left: 1.5em; }
+.md-doc li { margin: .15em 0; }
+.md-doc a { color: var(--accent); text-decoration: underline; cursor: default; }
+.md-doc code { font-family: var(--mono); font-size: 0.85em; background: var(--code-line); padding: 1px 4px; border-radius: var(--r-sm); }
+.md-doc pre { background: var(--code-line); padding: 10px 12px; border-radius: var(--r-sm); overflow-x: auto; }
+.md-doc pre code { background: none; padding: 0; }
+.md-doc blockquote { border-left: 3px solid var(--line); padding-left: 12px; color: var(--muted); }
+.md-doc table { border-collapse: collapse; }
+.md-doc th, .md-doc td { border: 1px solid var(--line-soft); padding: 4px 8px; }
+.md-doc hr { border: 0; border-top: 1px solid var(--line); }
+.md-image { color: var(--muted); font-style: italic; }
+
+/* A changed block: a green bar in the margin, the block itself untinted
+   so it reads as prose. Positioned from the block, so it follows lists
+   and quotes in. */
+.md-doc .md-changed { position: relative; }
+.md-doc .md-changed::before { content: ""; position: absolute; left: -20px; top: 2px; bottom: 2px; width: 3px; border-radius: 2px; background: var(--success); }
+.md-doc li.md-changed::before { left: calc(-20px - 1.5em); }
+/* Lines removed just before this block: a red tick above it with the
+   count, since the removed text itself is only in the diff. */
+.md-doc .md-removed { position: relative; }
+.md-doc .md-removed::after { content: "− " attr(data-removed) " removed"; position: absolute; left: -30px; top: -.95em; font: var(--fs-2xs) var(--mono); color: var(--danger); white-space: nowrap; }
+.md-doc li.md-removed::after { left: calc(-30px - 1.5em); }
+.md-doc .md-removed-after::after { top: auto; bottom: -1.2em; }
+.md-note-btn { float: right; margin-left: 8px; font: var(--fs-xs) var(--sans); color: var(--accent); border: 1px solid var(--line); border-radius: var(--r-xl); padding: 0 8px; background: var(--bg-2); }
+.md-note-btn:hover { background: var(--bg-3); }
+
+/* --- Binary files -------------------------------------------------- */
+
+/* Images on a neutral checkerboard, so transparency reads as
+   transparency rather than as the page. Before and after side by side. */
+.binary-hunk { padding: 14px; background: var(--code); }
+.bin-sides { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+.bin-side { margin: 0; flex: 1 1 280px; min-width: 0; }
+.bin-side figcaption { font: var(--fs-xs) var(--mono); color: var(--dim); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .06em; }
+.bin-old figcaption { color: var(--danger); }
+.bin-new figcaption { color: var(--success); }
+.bin-side img, .md-doc img.md-img {
+  display: block; max-width: 100%; height: auto; border: 1px solid var(--line-soft); border-radius: var(--r-sm);
+  background: repeating-conic-gradient(var(--checker-a) 0 25%, var(--checker-b) 0 50%) 0 0 / 16px 16px;
+  image-rendering: auto;
+}
+.md-doc img.md-img { margin: 6px 0; }
+.bin-placeholder { font: var(--fs-sm) var(--mono); padding: 8px 0; }
+
+/* A newer build is waiting. Green, like Approve: it is the thing to do. */
+.update-btn { background: var(--approve); color: var(--on-approve); font-weight: 600; }
+
+/* --- The theme picker ---------------------------------------------- */
+
+/* A sheet in the current theme; each card's sample carries its own
+   data-theme, so it is drawn in the theme it offers. */
+.picker { width: min(920px, 100%); background: var(--bg); border: 1px solid var(--line); border-radius: var(--r-xl); box-shadow: var(--shadow-overlay); padding: 26px 26px 20px; }
+.picker-title { font-size: var(--fs-2xl); font-weight: 600; margin: 0; line-height: 1.3; }
+.picker-lede { font-size: var(--fs-md); color: var(--muted); margin: 4px 0 20px; }
+.picker-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.picker-card { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 12px; text-align: left; border-radius: var(--r-lg); border: 1px solid var(--line); background: var(--bg); transition: border-color 80ms ease-out, box-shadow 80ms ease-out; }
+.picker-card:hover { border-color: var(--muted); }
+.picker-card.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
+.picker-name { display: flex; gap: 6px; align-items: center; font-size: var(--fs-md); font-weight: 600; }
+.picker-rec { font-size: var(--fs-2xs); font-weight: 500; color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 0 6px; }
+.picker-note { font-size: var(--fs-sm); color: var(--muted); margin-top: 2px; min-height: 1.4em; }
+.picker-actions { display: flex; justify-content: flex-end; margin-top: 20px; }
+.picker-frame { height: 132px; display: grid; border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--line); }
+.picker-frame.split { grid-template-columns: 1fr 1fr; }
+.picker-sample { min-width: 0; overflow: hidden; display: flex; flex-direction: column; background: var(--code); color: var(--text); font: 10.5px/17px var(--mono); white-space: pre; }
+.picker-sample-bar { flex: 0 0 auto; display: flex; align-items: center; gap: 6px; height: 22px; padding: 0 8px; background: var(--bg-2); border-bottom: 1px solid var(--line); font: 600 11px var(--sans); white-space: nowrap; overflow: hidden; }
+.picker-sample-bar .brand-mark { width: 9px; height: 9px; flex: 0 0 auto; }
+.picker-sample-bar .brand-mark::after { inset: 2px; }
+.picker-sample-line { padding: 0 8px; }
+.picker-sample-line:first-of-type { color: var(--muted); padding-top: 3px; }
+.picker-sample-line.add { background: var(--diff-add-line); box-shadow: inset 3px 0 0 var(--diff-add-gutter); }
+.picker-sample-line.del { background: var(--diff-del-line); box-shadow: inset 3px 0 0 var(--diff-del-gutter); }
+.picker-sample-foot { margin-top: auto; display: flex; justify-content: flex-end; padding: 6px 8px; background: var(--bg-2); border-top: 1px solid var(--line); }
+.picker-sample-approve { font: 600 10px var(--sans); padding: 2px 9px; border-radius: var(--r-sm); background: var(--approve); color: var(--on-approve); }
+
+/* --- First run: getting started ---------------------------------------- */
+
+/* Until a real review has ever arrived, the empty pane says how to get one. */
+.getting-started { max-width: 620px; margin: 0 auto; text-align: left; color: var(--text); font-size: var(--fs-lg); }
+.getting-started h2 { font-size: var(--fs-2xl); font-weight: 600; margin: 0 0 6px; }
+.gs-lede { color: var(--muted); margin: 0 0 22px; line-height: 1.55; }
+.gs-steps { list-style: none; padding: 0; margin: 0 0 22px; counter-reset: gs; }
+.gs-steps li { counter-increment: gs; position: relative; padding: 14px 16px 14px 52px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--bg-2); margin-bottom: 10px; line-height: 1.5; }
+.gs-steps li::before { content: counter(gs); position: absolute; left: 16px; top: 13px; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: var(--on-accent); font-size: var(--fs-sm); font-weight: 600; display: grid; place-items: center; }
+.gs-steps li b { display: block; margin-bottom: 2px; }
+.gs-steps li .btn { margin-top: 10px; }
+.gs-m { color: var(--muted); font-size: var(--fs-md); }
+.gs-steps .gs-m { display: block; }
+.gs-alt { display: block; margin-top: 8px; font-size: var(--fs-sm); color: var(--muted); }
+.gs-done { margin: 10px 0 0; font-size: var(--fs-md); color: var(--approve); }
+.gs-warn { margin: 10px 0 0; font-size: var(--fs-md); color: var(--attention); }
+.gs-tour { display: flex; gap: 12px; align-items: center; }
+.gs-aside { color: var(--muted); font-size: var(--fs-md); margin-top: 18px; }
+
+/* A button that reads as a link: for the quiet way to do something. */
+button.link { background: none; border: 0; padding: 0; color: var(--accent); font: inherit; cursor: pointer; }
+button.link:hover { text-decoration: underline; }
+
+.picker-next { margin-right: auto; align-self: center; color: var(--muted); font-size: var(--fs-md); }
+.picker-actions .btn + .btn { margin-left: 8px; }
+
+/* --- The tour ----------------------------------------------------------- */
+
+/* The cut-out dims everything around it with one shadow, and lets clicks
+   through, so the thing it points at can be tried. */
+.tour-hole { position: fixed; z-index: 900; border-radius: var(--r-lg); pointer-events: none; box-shadow: 0 0 0 9999px var(--backdrop), 0 0 0 2px var(--accent); transition: left .18s ease, top .18s ease, width .18s ease, height .18s ease; }
+.tour-card { position: fixed; z-index: 901; width: 320px; background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: var(--r-xl); box-shadow: var(--shadow-overlay); padding: 16px; font-size: var(--fs-md); line-height: 1.55; }
+.tour-step { color: var(--muted); font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+.tour-title { font-size: var(--fs-lg); font-weight: 600; margin-bottom: 4px; }
+.tour-text { margin: 0; }
+.tour-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; }
+.tour-buttons { display: flex; gap: 8px; }
+.tour-skip { background: none; border: 0; padding: 0; color: var(--muted); font: inherit; font-size: var(--fs-sm); cursor: pointer; }
+.tour-skip:hover { color: var(--text); }

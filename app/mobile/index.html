@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- The server fills in this Mac's name and colour, so the home-screen
+         label and the browser chrome name the machine before any script runs. -->
+    <meta name="theme-color" content="__MACHINE_COLOR__" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="__MACHINE_NAME__" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icon-180.png" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <title>Threshold · __MACHINE_NAME__</title>
+    <style>:root { --machine: __MACHINE_COLOR__; }</style>
+  </head>
+  <body>
+    <div id="app"><header class="band"><span class="band-name">__MACHINE_NAME__</span><span class="band-app">Threshold</span></header></div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

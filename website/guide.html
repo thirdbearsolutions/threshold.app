@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Threshold guide</title>
+  <meta name="description" content="How to read, question and decide a review in Threshold, pair your phone, and hook up an agent.">
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="stylesheet" href="css/site.css">
+  <script src="js/site.js" defer></script>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="index.html"><img src="icon.png" alt="">Threshold</a>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="guide.html">Guide</a>
+      <a class="btn small" data-repo="">Source</a>
+      <a class="btn small lit" href="index.html#download">Download</a>
+    </nav>
+  </div>
+</header>
+
+<div class="guide">
+  <aside class="toc">
+    <p class="kicker">The guide</p>
+    <ol>
+      <li><a href="#what">What Threshold is</a></li>
+      <li><a href="#install">Installing</a></li>
+      <li><a href="#agent">Hooking up an agent</a></li>
+      <li><a href="#inbox">The inbox</a></li>
+      <li><a href="#reading">Reading a review</a></li>
+      <li><a href="#discuss">Discuss</a></li>
+      <li><a href="#verdict">The verdict</a></li>
+      <li><a href="#others">Other people's changes</a></li>
+      <li><a href="#pinning">Pinning</a></li>
+      <li><a href="#off">When something looks off</a></li>
+      <li><a href="#phone">Your phone</a></li>
+      <li><a href="#log">The session log</a></li>
+      <li><a href="#building-from-source">Building from source</a></li>
+    </ol>
+    <div class="who">Setting up: chapters 1–3.<br>Using it: 4–10.<br>Further: 11–13.</div>
+  </aside>
+
+  <article class="doc">
+    <p class="kicker">Threshold v<span data-version>0.1.0</span></p>
+    <h1>The guide</h1>
+    <p class="lede">How to install Threshold, read a review, talk it through with the agent, and give your verdict.</p>
+
+    <h2 id="what"><span class="n">01</span>What Threshold is</h2>
+    <p>Threshold is a desktop review inbox. A change arrives as a <b>review</b>: the diff cut into <b>chapters</b>, in the order that explains it rather than the order git emits it. The idea comes first, then what follows from it, then the mechanical edits, labelled as such. A <b>brief</b> up front says what the change is and what it implies. <b>Flags</b> mark the few lines that matter. You leave <b>notes</b> on any line, and the answers come back in a <b>thread</b> on that line.</p>
+    <p>The chapters are written by an agent that understands the change, and there are two ways that happens:</p>
+    <ul>
+      <li><b>Your agent's own change.</b> It has finished something wide-reaching, commits it to a branch, and hands it to you before it lands. It stays on the other end: your questions get answers, your objections get revisions, and the review ends with your <b>verdict</b>.</li>
+      <li><b>Someone else's PR.</b> You point an agent at a colleague's branch. It reads the change and hands it to you as a review, with a brief, chapters and flags (<a href="#others">chapter 8</a>).</li>
+    </ul>
+    <p>Threshold is a desktop app because the work it shows you is on your machine: the agent runs there, and the repository is there. Threshold reads the diff from your checkout with git, so nothing is uploaded anywhere. The agent and Threshold talk through a file in <code>~/.threshold/reviews/</code>. Any agent that can run shell commands can write one, and there's nothing else to set up. Because a review is a file instead of a protocol, agents can send reviews even when the app isn't open, and you can do your reviews even when no agent is actively listening.</p>
+
+    <h2 id="install"><span class="n">02</span>Installing</h2>
+    <ol>
+      <li><a href="index.html#download">Download</a> the build for your machine and drag <b>Threshold</b> into Applications.</li>
+      <li>Open it once. The builds aren't notarized yet, so macOS stops the first launch with "Apple could not verify Threshold is free of malware", and offers only <b>Done</b> and <b>Move to Trash</b>. That's expected:
+        <ol>
+          <li>Click <b>Done</b>.</li>
+          <li>Open <b>System Settings → Privacy &amp; Security</b> and scroll down to <b>Security</b>. It says Threshold was blocked, with an <b>Open Anyway</b> button.</li>
+          <li>Click <b>Open Anyway</b>, confirm with your password or Touch ID, then choose <b>Open</b>.</li>
+        </ol>
+        The button only shows for a while after a blocked launch. If it isn't there, open Threshold again, click Done, and go back. You only do this the first time.</li>
+      <li>Leave it running. It's an inbox: it's most useful when it's already open when a review arrives.</li>
+      <li>Give your agent the <code>threshold-review</code> skill (<a href="#agent">chapter 3</a>). It tells the agent how to write a review.</li>
+    </ol>
+
+    <h2 id="agent"><span class="n">03</span>Hooking up an agent</h2>
+    <p>The agent's half of Threshold is the <b><code>threshold-review</code> skill</b>: one Markdown file that tells an agent when to ask for a review and how to write one. It covers the brief, the bundle, flags, reading Threshold's diagnostics, answering your notes, revising, and acting on your verdict.</p>
+    <h3>Claude Code</h3>
+    <p>Until your first review arrives, Threshold's main pane has an <b>Install for Claude Code</b> button. It copies the skill into <code>~/.claude/skills/threshold-review/</code>. From a clone of the repository, you can copy it yourself:</p>
+    <pre><code>mkdir -p ~/.claude/skills/threshold-review
+cp skills/threshold-review/SKILL.md ~/.claude/skills/threshold-review/</code></pre>
+    <p>Then ask for it the way you'd ask a person: "review this in Threshold", "let me approve this first", "show me the diff before you push". The skill also tells the agent to reach for Threshold on its own before anything destructive or wide-reaching.</p>
+    <h3>Any other agent</h3>
+    <p>Give it the contents of <code>SKILL.md</code>. There's no SDK, server or API to install. An agent that can run shell commands, append a line to a file and read one back can use Threshold.</p>
+    <div class="aside"><span class="k">when</span>The skill tells agents to use Threshold for changes that are hard to reverse or too large to judge from a sentence, and not for small fixes.</div>
+
+    <h2 id="inbox"><span class="n">04</span>The inbox</h2>
+    <p>Every review lives in <code>~/.threshold/reviews/</code> as one file. The inbox lists them, newest first, under the name the agent gave the file: a date and the repository, like <code>2026-10-27-143005-stacks</code>. A count shows how many are waiting on you.</p>
+    <p>The agent will also say in chat that a review is waiting, and name it. If Threshold isn't running, the agent says so rather than launching it: the review waits in the folder until you open the app.</p>
+    <p>Reviews you're done with can be <b>archived</b>. <b>History</b> shows every past verdict and what it was about.</p>
+
+    <h2 id="reading"><span class="n">05</span>Reading a review</h2>
+    <h3>Start with the brief</h3>
+    <p>The brief comes before any code: a title, a summary, and the implications. These are what's irreversible, what will fail loudly, and what the agent couldn't check. Read it the way you'd read a colleague's note on a pull request. It tells you where to point your attention.</p>
+
+    <h3>Narrative or files</h3>
+    <p>The <b>narrative</b> is the agent's chapters, in the order that explains the change: the idea first, the mechanical call-site edits last, labelled as such. The <b>files</b> view is the plain per-file diff git would give you. Toggle between them whenever you like.</p>
+    <p>Threshold checks that every hunk is in some chapter and shows the count, <code>13 of 13 hunks in a chapter</code>. If any are missing, the count turns red, the missing hunks get a section of their own, and the narrative won't open as the agent's story at all.</p>
+
+    <h3>Flags</h3>
+    <p>Before you've read anything, the agent can mark the lines it thinks matter:</p>
+    <table>
+      <tr><th>flag</th><th>means</th></tr>
+      <tr><td><span class="flagchip attention">attention</span></td><td>The load-bearing line: the decision everything else follows from.</td></tr>
+      <tr><td><span class="flagchip caution">caution</span></td><td>The risky one: irreversible, or the most likely to be wrong.</td></tr>
+      <tr><td><span class="flagchip context">context</span></td><td>Looks odd, isn't. Saves you a question.</td></tr>
+    </table>
+    <p>Each flag quotes the line it's about. If the quote doesn't match the line it lands on, Threshold drops the flag. Code the agent never looked at doesn't get a confident pointer.</p>
+
+    <h3>Markdown and images</h3>
+    <p>A changed Markdown file is rendered, with the changed blocks marked and its relative images shown inline. A design doc and its figures read together. Changed images are shown before and after, side by side.</p>
+
+    <h3>The facts</h3>
+    <p>At the top: files and lines changed, whether anything is deleted, and whether a test file is touched.</p>
+
+    <h2 id="discuss"><span class="n">06</span>Discuss</h2>
+    <p>Comment on a line, on a chapter, or on the review as a whole. The agent is watching the same log, and replies in a thread under your note.</p>
+    <p>If your question finds something, the agent fixes it, commits, and posts a <b>revision</b>. The diff on screen moves to the new commits, and a fresh narrative follows. Notes left on older code say so instead of quietly re-attaching to whatever line now sits there. A note follows its line through an amend when the line is still there.</p>
+    <p>As you go, <b>mark chapters</b> you've been through. A mark records progress, not approval.</p>
+
+    <h2 id="verdict"><span class="n">07</span>The verdict</h2>
+    <p><b>Approve</b> or <b>Reject</b>. A rejection needs a reason, and the agent treats that reason as its next instruction.</p>
+    <p>Either verdict carries the SHA-256 of the diff that was on your screen, so the agent can prove your approval is about what it's about to ship:</p>
+    <pre><code>git diff main...HEAD | shasum -a 256   # must equal the verdict's digest</code></pre>
+    <p>A verdict is the end of a review, unless the agent revises after it. Then the review goes back to waiting on you.</p>
+    <p>Every verdict is also written to a permanent decision log alongside the reviews: a plain, append-only record of what was decided, about which revision, with its digest.</p>
+
+    <h2 id="others"><span class="n">08</span>Other people's changes</h2>
+    <p>An agent can also write a review of a colleague's PR. Ask it:</p>
+    <pre><code>Read PR 214 (branch feature/cover-storage) and hand it to me in Threshold.
+Chapters in the order that explains it, flags on what I should look at,
+and tell me what you couldn't work out from the code.</code></pre>
+    <p>The agent fetches the branch, reads it, and writes the review for a range such as <code>main...origin/feature/cover-storage</code>. The review pins to those commits like any other. You read it, ask the agent about anything, and take what you've learned back to the PR.</p>
+    <div class="aside"><span class="k">the difference</span>The agent didn't write this change, so it can explain it but not revise it. Its brief is a reading, not the author's intent: where it says it couldn't work out why, that's a question for the author.</div>
+    <h3 id="solo">With no agent at all</h3>
+    <p>Threshold also works as a plain diff reader. Open any repository and review its working tree, its staged changes, or a revision such as <code>main...HEAD</code>. There are no chapters without someone to write them, but pinning, the facts, Markdown and images all still apply.</p>
+
+    <h2 id="pinning"><span class="n">09</span>Pinning</h2>
+    <p>A revision spec like <code>main...HEAD</code> is a question, not a thing. Ask it again after the agent commits, or after someone moves <code>main</code>, and you get a different answer. A review that re-ran <code>git diff</code> every time you came back would show a different change each visit, silently.</p>
+    <p>So when a review lands, Threshold resolves its spec once, to the two commits git would compare, and diffs <em>those</em> from then on. Two object ids name exactly one diff forever. You'll see this in the header: <code>pinned 3f9e1c2..a71d0b4</code>.</p>
+    <div class="aside caution"><span class="k">unpinned</span>Some specs can't be pinned. <code>HEAD~3</code> or a bare diff compares against the working tree, so half of what you see is whatever is on disk right now. Those reviews still open, with a warning across the diff, and Threshold tells you if the diff moves while you're reading. Ask the agent to commit and hand over a range.</div>
+
+    <h2 id="off"><span class="n">10</span>When something looks off</h2>
+    <table>
+      <tr><th>you see</th><th>it means</th></tr>
+      <tr><td>The hunk count is red</td><td>The agent's narrative leaves something out. The missing hunks are listed in their own section. Ask the agent for a complete bundle, or read them in the files view.</td></tr>
+      <tr><td>A warning across the diff</td><td>The review isn't pinned and part of it is the working tree. Ask for a committed two-commit range.</td></tr>
+      <tr><td>A note says it was made on older code</td><td>The agent revised since. Check whether the line you asked about still says what it said.</td></tr>
+      <tr><td>A flag you expected isn't there</td><td>Its quoted text didn't match the line, so Threshold dropped it.</td></tr>
+      <tr><td>The phone says the Mac isn't there</td><td>Threshold isn't running on that Mac, or Tailscale is off on one side.</td></tr>
+      <tr><td>Nothing ever arrives</td><td>The agent doesn't have the skill, or is writing somewhere other than <code>~/.threshold/reviews/</code>.</td></tr>
+    </table>
+    <p>Problems with what the agent sent are also written into the log as diagnostics, addressed to the agent, so it can usually fix them before you get that far.</p>
+
+    <h2 id="phone"><span class="n">11</span>Your phone</h2>
+    <p>Threshold can serve your reviews to your phone over Tailscale. From the phone you can read, ask, mark chapters, and approve or reject. It notifies you when an agent has said something you're waiting on.</p>
+    <ol>
+      <li>Run the phone setup script from the Threshold repository: <code>scripts/threshold-mobile-setup.sh</code>. It installs Tailscale if needed and asks what to call this Mac.</li>
+      <li>That name becomes the Mac's tailnet address, the home-screen label, and the coloured band across the top of every phone screen, in the colour you pick. Give each Mac its own name and colour.</li>
+      <li>In Threshold, open <b>Phone</b> and scan the code with your phone's camera. Add the page to your home screen.</li>
+    </ol>
+    <p>The code works once, for one minute. Phones paired from the Mac can be revoked there. The phone works only while Threshold is running on that Mac, and it says so when it isn't. <code>scripts/threshold-mobile-setup.sh --off</code> turns it off.</p>
+    <table>
+      <tr><th>guarantee</th><th>how</th></tr>
+      <tr><td>Never on the public internet</td><td>Threshold listens on 127.0.0.1 only; <code>tailscale serve</code> puts it on your tailnet over HTTPS.</td></tr>
+      <tr><td>A phone verdict is about what it showed</td><td>It names the diff it read and is refused if that diff has changed since.</td></tr>
+      <tr><td>Only your phones</td><td>Every request carries a device credential from pairing.</td></tr>
+      <tr><td>The right Mac</td><td>Every write names the machine it's meant for; a write that reaches a different Mac is refused.</td></tr>
+      <tr><td>Private notifications</td><td>Encrypted end to end (RFC 8291); the push service relays them unread.</td></tr>
+    </table>
+
+    <h2 id="log"><span class="n">12</span>The session log</h2>
+    <p>A review is one append-only JSONL file, the <b>session log</b>. The agent writes to it, Threshold writes to it, and both watch it. Nothing else connects them. Each line is one complete event:</p>
+    <pre><code>{"seq":1,"at_ms":1757255400000,"from":"agent","revision":"main...HEAD","kind":"brief",
+ "repo":"/path/to/repo","title":"Move book covers into storage","summary":"…",
+ "implications":["Irreversible without a restore","…"]}</code></pre>
+    <p><code>seq</code> is one greater than the highest in the file. <code>from</code> is <code>agent</code>, <code>human</code> or <code>threshold</code>. <code>revision</code> records which version of the change the event was written against.</p>
+    <table>
+      <tr><th>kind</th><th>from</th><th>what it is</th></tr>
+      <tr><td><code>brief</code></td><td>agent</td><td>What the change is and what it implies. Opens the review and names the repo.</td></tr>
+      <tr><td><code>bundle</code></td><td>agent</td><td>The narrative: chapters of hunks in the order that explains the change.</td></tr>
+      <tr><td><code>note</code></td><td>either</td><td>A comment on a line, a chapter or the whole review. An agent's note with a <code>flag</code> marks a line.</td></tr>
+      <tr><td><code>reply</code></td><td>agent</td><td>An answer to a note.</td></tr>
+      <tr><td><code>revised</code></td><td>agent</td><td>The code changed; the diff under review moves.</td></tr>
+      <tr><td><code>pinned</code></td><td>threshold</td><td>The review's revision resolved to two commits.</td></tr>
+      <tr><td><code>diagnostic</code></td><td>threshold</td><td>A problem with what the agent sent.</td></tr>
+      <tr><td><code>chaptermark</code></td><td>human</td><td>The reviewer has been through a chapter. Progress, not approval.</td></tr>
+      <tr><td><code>verdict</code></td><td>human</td><td><code>approved</code> or <code>rejected</code>, with a reason and the digest of the diff on screen.</td></tr>
+    </table>
+    <p>Because it's a file, you can read any review with <code>cat</code>, and it survives a restart on either side.</p>
+
+    <h2 id="building-from-source"><span class="n">13</span>Building from source</h2>
+    <p>Threshold is a Tauri app: a Rust core and shell with a TypeScript UI. You'll need Rust, Node, and Tauri's platform prerequisites (on Linux, the WebKitGTK libraries).</p>
+    <pre><code>cd app
+npm install
+npm test            # the UI's pure logic
+cargo test          # the diff parser, logs, pinning, the phone server
+../scripts/build-git.sh   # the git the app carries (THIRD_PARTY_NOTICES.md)
+npm run app:build   # bundles land in target/release/bundle/</code></pre>
+    <p>On a Mac, <code>scripts/install.sh</code> builds and installs it into <code>/Applications</code>, and <code>scripts/install-hooks.sh</code> keeps it current as you pull.</p>
+    <p>The source is MIT-licensed, and <a data-repo="">the repository</a> is on GitHub.</p>
+  </article>
+</div>
+
+<footer>
+  <div class="wrap">
+    <a class="brand" href="index.html"><img src="icon.png" alt="">Threshold</a>
+    <span class="spacer"></span>
+    <a href="index.html#download">Download</a>
+    <a data-repo="">Source</a>
+    <span>MIT &middot; Third Bear Solutions</span>
+  </div>
+</footer>
+
+</body>
+</html>

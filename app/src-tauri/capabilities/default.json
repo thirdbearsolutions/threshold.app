@@ -1,0 +1,15 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Threshold main window: pick a repo, review its diff, approve or reject, and notify when a review arrives.",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default",
+    "core:window:allow-show",
+    "core:window:allow-set-theme",
+    "dialog:allow-open",
+    "notification:default"
+  ]
+}

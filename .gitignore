@@ -1,0 +1,8 @@
+node_modules/
+dist/
+dist-mobile/
+target/
+**/src-tauri/gen/
+*.log
+.DS_Store
+app/src-tauri/binaries/
